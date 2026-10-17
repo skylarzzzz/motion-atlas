@@ -90,14 +90,14 @@ details pre { border: 0; border-top: 1px solid var(--line); border-radius: 0; wh
   <header>
     <div class="eyebrow"><b>Claude Skill</b> · motion-atlas · MIT</div>
     <h1>Motion Atlas<span>.</span></h1>
-    <p class="lede">123 款商用级动效，全部是代码。说一句话，Claude 从里面挑风格、写文案、卡节奏，直接渲染成片。</p>
+    <p class="lede">138 款商用级动效，全部是代码。说一句话，Claude 从里面挑风格、写文案、卡节奏，直接渲染成片。</p>
     <p class="sub">下面这块屏幕是真的在运行：每一帧都是你手机现场算出来的，不是视频。点左右切换，或者按类别挑。</p>
   </header>
 
   <section class="player" aria-label="动效实时预览">
     <div class="screen">
       <canvas id="out" width="1920" height="1080" aria-label="当前动效的实时画面"></canvas>
-      <div class="hud"><span id="hudL">LIVE · WEBGL</span><span id="hudR">01 / 18</span></div>
+      <div class="hud"><span id="hudL">LIVE · WEBGL</span><span id="hudR">01 / 31</span></div>
       <div class="status" id="status">加载中…</div>
     </div>
     <div class="meta">
@@ -106,8 +106,10 @@ details pre { border: 0; border-top: 1px solid var(--line); border-radius: 0; wh
       <p class="desc" id="desc"></p>
     </div>
     <div class="chips" role="group" aria-label="切换列表">
-      <button class="chip" type="button" data-set="pick" aria-pressed="true">精选 18</button>
-      <button class="chip" type="button" data-set="all" aria-pressed="false">全部 123</button>
+      <button class="chip" type="button" data-set="pick" aria-pressed="true">精选 31</button>
+      <button class="chip" type="button" data-set="v1" aria-pressed="false">第一弹 15</button>
+      <button class="chip" type="button" data-set="v2" aria-pressed="false">第二弹 14</button>
+      <button class="chip" type="button" data-set="all" aria-pressed="false">全部 138</button>
     </div>
     <div class="strip" id="strip" aria-label="动效列表"></div>
     <p class="note">光线步进类的 3D 场景（素坯、螺旋楼梯、梯池等）运算量大，在手机上会掉帧。成片是逐帧离线渲染的，所以视频里永远流畅。</p>
@@ -118,6 +120,7 @@ details pre { border: 0; border-top: 1px solid var(--line); border-radius: 0; wh
     <div class="prompts">
       <div class="prompt"><p>挑 8 款暗黑科技风，做一支 40 秒的产品发布开场，主色换成品牌蓝 #2F6BFF。</p><div class="row"><span class="tag">产品开场</span><button type="button" data-copy>复制</button></div></div>
       <div class="prompt"><p>做一支小红书用的动效合集，每款 4 秒，亮暗交替，开头用快剪，结尾放图片墙。</p><div class="row"><span class="tag">社媒合集</span><button type="button" data-copy>复制</button></div></div>
+      <div class="prompt"><p>把彩墨冲撞单独导出一段 4 秒竖版素材，不要文字，我要插进自己的视频里。</p><div class="row"><span class="tag">单款素材</span><button type="button" data-copy>复制</button></div></div>
       <div class="prompt"><p>只用东方题材的几款：彩墨、青花瓷、竖排诗笺、书法，做成 30 秒的品牌片头。</p><div class="row"><span class="tag">主题限定</span><button type="button" data-copy>复制</button></div></div>
     </div>
   </section>
@@ -150,7 +153,7 @@ details pre { border: 0; border-top: 1px solid var(--line); border-radius: 0; wh
     <div class="split">
 <pre><span class="hl">motion-atlas/</span>
 ├─ <span class="hl">SKILL.md</span>        写给 Claude 的说明书
-├─ STYLES.md       123 款动效目录
+├─ STYLES.md       138 款动效目录
 ├─ README.md       给人看的使用说明
 ├─ LICENSE         MIT
 ├─ app/
@@ -162,12 +165,13 @@ details pre { border: 0; border-top: 1px solid var(--line); border-radius: 0; wh
 └─ tools/
    ├─ preview.py   抽帧自查
    ├─ music.py     配乐和卡点
+   ├─ clip.py      单款导出素材
    └─ render.py    一键出片</pre>
       <details>
         <summary>SKILL.md 全文</summary>
         <pre id="skillmd">---
 name: motion-atlas
-description: Make commercial-grade, code-only motion showcase videos (16:9, split text panel, rapid-cut intro, image-wall outro, synced music) from the Motion Atlas library of 123 WebGL/Canvas styles. Use when asked for a motion reel, style showcase, animated product opener, or &quot;AI 动效视频&quot;.
+description: Make commercial-grade, code-only motion showcase videos (16:9, split text panel, rapid-cut intro, image-wall outro, synced music) from the Motion Atlas library of 138 WebGL/Canvas styles. Use when asked for a motion reel, style showcase, animated product opener, or &quot;AI 动效视频&quot;.
 ---
 
 # Motion Atlas — 代码动效成片
@@ -191,6 +195,17 @@ The code lives in the **motion-atlas** kit (`app/`, `tools/`, `STYLES.md`, `READ
 
    You also need `ffmpeg`. If the environment already ships Chromium, point Playwright at it instead of installing.
 3. Rendering needs a real shell with Chromium and ffmpeg. In a chat without code execution, you can only publish `app/gallery.html` as a live page. Say so before promising an MP4.
+
+## 0.5 Which mode does the user want?
+
+- **Full film** (&quot;做一支视频 / 合集 / 开场&quot;): follow sections 1–4.
+- **Single clip to drop into their own edit** (&quot;只要彩墨那段 / 导出素材 / 插进我的视频&quot;):
+  - run `python3 tools/clip.py KEY [--dur S] [--vertical] [--loop] [--png]`;
+  - the output is art only: no text panel, no HUD, no audio;
+  - `--vertical` crops 1080×1920 around the subject; adjust `--cx` if the subject sits elsewhere;
+  - preview the key first with `tools/preview.py style KEY 1 4 7`, then deliver `out/clips/KEY.mp4`.
+  - Several clips are fine: run one per key.
+- **Live on a web page:** load the `app/` scripts and call `renderST(index, lt)` each frame. `docs/index.html` is a working example.
 
 ## 1. Settle the brief, then pick styles
 
@@ -247,6 +262,7 @@ Look at the sheet yourself (Read the image). Fix before rendering:
 - **A scene barely changes** across its 3 frames. Add a camera move, a build-up (things drop in or rise up), a light sweep, or shorten it to 4 s. The user rejects static scenes (&quot;没有动感张力&quot;).
 - **Stepped motion reads as stutter.** Quantised animation (`Math.floor(lt*8)` stripes) looks choppy. Use continuous phases.
 - **Overlapping pigments turn black.** In subtractive mixes, weight by the dominant pigment rather than summing.
+- **Physical motion runs backwards.** Check that cause → effect reads correctly. Domino tiles must tip toward the next unfallen tile; the original bug was the opposite.
 - **Wrong frames in raymarched shaders.** `pow(negative, n)` is undefined in GLSL; write `(x)*(x)*(x)`.
 
 ## 4. Render and deliver
@@ -291,11 +307,14 @@ Then write each style from its one-line description in `STYLES.md`.
 <script src="lib/gl.js"></script><script src="lib/lib3.js"></script><script src="lib/film.js"></script><script src="lib/base.js"></script><script src="lib/shim.js"></script>
 <script src="lib/b1.js"></script><script src="lib/b2.js"></script><script src="lib/b3.js"></script><script src="lib/b4.js"></script><script src="lib/b5.js"></script><script src="lib/b6.js"></script>
 <script src="lib/c1.js"></script><script src="lib/c2.js"></script><script src="lib/c3.js"></script><script src="lib/c4.js"></script><script src="lib/c5.js"></script><script src="lib/c6.js"></script><script src="lib/c7.js"></script>
+<script src="lib/v1/sc1.js"></script><script src="lib/v1/sc2.js"></script><script src="lib/v1/sc3.js"></script><script src="lib/v1/sc4.js"></script><script src="lib/v1/geo.js"></script><script src="lib/v1/globe_port.js"></script><script src="lib/v1/pack.js"></script>
 <script>
 (() => {
-  const PICK = ['SATURNX', 'COLORINK', 'SPLITFLAP', 'MEMPHIS', 'STAMPS', 'DOMINO', 'GLASS', 'NEBULA', 'STRINGART', 'CANDLES', 'MOBIUS', 'PENROSE', 'AURORAX', 'CRANES', 'SAKURA', 'LANTERN', 'MOSAIC', 'TERRAZZO'];
+  const VOL1 = ['POINTKNOT', 'ARCADE', 'CHROME', 'ASCENT', 'OPTIC', 'SEQUIN', 'TOMATO', 'GRAVITY', 'ZEN', 'COUTURE', 'CLAY', 'ISOFAB', 'CONFETTI', 'FOLD', 'GLOBE'];
+  const VOL2 = ['SATURNX', 'MEMPHIS', 'STAIRWELL', 'COLORINK', 'TERRACE', 'MOBIUS', 'STAMPS', 'SPLITFLAP', 'VASE', 'CANDLES', 'DOMINO', 'STRINGART', 'GLASS', 'NEBULA'];
+  const PICK = [...new Set(['SATURNX', 'COLORINK', 'SPLITFLAP', 'MEMPHIS', 'STAMPS', 'DOMINO', 'GLASS', 'NEBULA', 'STRINGART', 'CANDLES', 'MOBIUS', 'PENROSE', 'AURORAX', ...VOL1, ...VOL2])];
   const $ = id => document.getElementById(id);
-  const all = ST.map((s, i) => i), pick = PICK.map(k => ST.findIndex(s => s.key === k)).filter(i => i >= 0);
+  const idx = ks => ks.map(k => ST.findIndex(s => s.key === k)).filter(i => i >= 0); const all = ST.map((s, i) => i), pick = idx(PICK), sets = { pick, v1: idx(VOL1), v2: idx(VOL2), all };
   let list = pick, pos = 0, t0 = performance.now(), visible = true, last = 0, slow = 0;
   function strip() { const el = $('strip'); el.textContent = ''; list.forEach((si, n) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = ST[si].cn; b.addEventListener('click', () => go(n)); el.appendChild(b); }); }
   function go(n) { pos = (n + list.length) % list.length; t0 = performance.now(); slow = 0; const s = ST[list[pos]];
@@ -304,7 +323,7 @@ Then write each style from its one-line description in `STYLES.md`.
     [...$('strip').children].forEach((b, i) => { b.setAttribute('aria-current', i === pos ? 'true' : 'false'); if (i === pos) b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); }); }
   $('prev').addEventListener('click', () => go(pos - 1)); $('next').addEventListener('click', () => go(pos + 1));
   $('out').addEventListener('click', () => go(pos + 1));
-  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === c ? 'true' : 'false')); list = c.dataset.set === 'all' ? all : pick; strip(); go(0); }));
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === c ? 'true' : 'false')); list = sets[c.dataset.set] || pick; strip(); go(0); }));
   document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', async () => { const p = b.closest('.prompt').querySelector('p'); try { await navigator.clipboard.writeText(p.textContent); b.textContent = '已复制'; } catch (e) { const r = document.createRange(); r.selectNodeContents(p); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = '已选中'; } setTimeout(() => { b.textContent = '复制'; }, 1600); }));
   new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe($('out'));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;

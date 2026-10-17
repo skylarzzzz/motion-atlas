@@ -2,11 +2,11 @@
 
 <h1 align="center">Motion Atlas · 动效图鉴</h1>
 
-<p align="center"><b>123 种商用级动效，全部是代码，零素材。</b><br>一个 Claude Skill：说一句话，挑风格、写文案、卡节奏，直接渲染成片。</p>
+<p align="center"><b>138 种商用级动效，全部是代码，零素材。</b><br>一个 Claude Skill：说一句话，挑风格、写文案、卡节奏，直接渲染成片。</p>
 
 <p align="center">
   <a href="https://USERNAME.github.io/motion-atlas/"><b>▶ 在线预览（实时运行）</b></a> ·
-  <a href="STYLES.md">全部 123 款</a> ·
+  <a href="STYLES.md">全部 138 款</a> ·
   <a href="SKILL.md">SKILL.md</a> ·
   <a href="#运行">快速开始</a>
 </p>
@@ -27,7 +27,7 @@
 
 ## 你能拿它做什么
 
-- **看：** 用浏览器打开 `app/gallery.html`，按 ← / → 浏览全部 123 款动效，都是实时运行的。
+- **看：** 用浏览器打开 `app/gallery.html`，按 ← / → 浏览全部 138 款动效，都是实时运行的。
 - **拼一支视频：** 改 `app/scenes.js`，挑哪几款、什么顺序、每款几秒；再改 `app/meta.js` 里的文案；最后运行 `python3 tools/render.py`，就能出片。
 - **拿走单个动效：** 每款都是独立的一小段代码，可以直接搬到你的网页、作品集或发布会里用。
 - **配合 Claude 使用：** 把 `SKILL.md` 装成 Claude 的 skill。之后跟 Claude 说「用暗黑科技风挑 8 款，做一支 40 秒的产品开场」，它会直接调用这里的代码。
@@ -64,7 +64,7 @@ app/
   bookend.js      片头快剪 + 结尾图片墙
   film.js         左侧文字栏和 HUD 外框
   main.js         时间轴
-  b1–b6.js, c1–c7.js   动效库（123 款），目录见 STYLES.md
+  b1–b6.js, c1–c7.js   动效库（138 款），目录见 STYLES.md
   gl.js lib3.js base.js shim.js   工具：WebGL 管线、3D 透视投影、颗粒等
 tools/
   preview.py      抽帧检查（整片 / 单款 / 每个场景）
@@ -73,7 +73,7 @@ tools/
   render.py       一键出片（多进程渲染 → 拼接 → 混音 → 压缩出分享版）
   clip.py         单款导出成干净素材（横版 / 竖版 / 逐帧 PNG）
   gifs.py         生成 README 里的动图
-STYLES.md         123 款动效目录
+STYLES.md         138 款动效目录
 ```
 
 ## 运行

@@ -1,6 +1,6 @@
 ---
 name: motion-atlas
-description: Make commercial-grade, code-only motion showcase videos (16:9, split text panel, rapid-cut intro, image-wall outro, synced music) from the Motion Atlas library of 123 WebGL/Canvas styles. Use when asked for a motion reel, style showcase, animated product opener, or "AI 动效视频".
+description: Make commercial-grade, code-only motion showcase videos (16:9, split text panel, rapid-cut intro, image-wall outro, synced music) from the Motion Atlas library of 138 WebGL/Canvas styles. Use when asked for a motion reel, style showcase, animated product opener, or "AI 动效视频".
 ---
 
 # Motion Atlas — 代码动效成片
