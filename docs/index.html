@@ -1,0 +1,319 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Motion Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@600;900&family=Noto+Sans+SC:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%}
+/* Layout: a screening-room spec sheet — the live player is the hero, everything after it is the skill's manual. Single dark look by choice. */
+:root {
+  --ground: #0B0B0D; --sheet: #141417; --line: #26262B; --ink: #EDEBE6; --mute: #A3A09A; --faint: #6E6C68; --signal: #FF5C40;
+  --display: "Bricolage Grotesque", "Noto Sans SC", system-ui, sans-serif;
+  --cn: "Noto Serif SC", "Songti SC", serif;
+  --body: "Noto Sans SC", -apple-system, "PingFang SC", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font: 15px/1.75 var(--body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 80px; display: grid; gap: 56px; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: .14em; color: var(--faint); text-transform: uppercase; }
+.eyebrow b { color: var(--signal); font-weight: 500; }
+h1 { font: 700 clamp(44px, 10vw, 96px)/.95 var(--display); letter-spacing: -.035em; margin: 10px 0 0; }
+h1 span { color: var(--signal); }
+.lede { font: 600 clamp(18px, 3.4vw, 24px)/1.5 var(--cn); margin: 14px 0 0; max-width: 34em; text-wrap: balance; }
+.sub { color: var(--mute); margin: 10px 0 0; max-width: 62ch; }
+h2 { font: 900 clamp(24px, 4.4vw, 34px)/1.25 var(--cn); margin: 0; text-wrap: balance; }
+h2 + p { color: var(--mute); margin: 6px 0 0; max-width: 62ch; }
+section { display: grid; gap: 20px; min-width: 0; }
+
+/* player */
+.player { display: grid; gap: 14px; }
+.screen { position: relative; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #000; aspect-ratio: 16 / 9; max-width: 100%; }
+.screen canvas { display: block; width: 100%; height: 100%; }
+.hud { position: absolute; inset: 10px 12px auto; display: flex; justify-content: space-between; gap: 12px; font: 500 11px/1 var(--mono); letter-spacing: .1em; color: rgba(255,255,255,.75); pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.status { position: absolute; left: 12px; bottom: 10px; font: 500 11px var(--mono); color: rgba(255,255,255,.7); pointer-events: none; }
+.meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 18px; align-items: end; }
+.meta .name { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; }
+.meta .cn { font: 900 clamp(26px, 5vw, 38px)/1.1 var(--cn); }
+.meta .en { font: 300 18px var(--display); color: var(--mute); }
+.meta .key { font: 500 12px var(--mono); color: var(--signal); letter-spacing: .08em; }
+.meta .desc { grid-column: 1 / -1; color: var(--mute); margin: 0; max-width: 60ch; }
+.ctrls { display: flex; gap: 8px; }
+button { font: 500 14px var(--body); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 3px; padding: 8px 14px; cursor: pointer; }
+button:hover { border-color: var(--mute); }
+button:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 12px var(--mono); padding: 6px 11px; border-radius: 20px; color: var(--mute); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.strip button { flex: 0 0 auto; padding: 6px 10px; font-size: 13px; }
+.strip button[aria-current="true"] { border-color: var(--signal); color: var(--signal); }
+
+/* prompts */
+.prompts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.prompt { border: 1px solid var(--line); background: var(--sheet); border-radius: 4px; padding: 16px 16px 12px; display: grid; gap: 10px; align-content: space-between; min-width: 0; }
+.prompt p { margin: 0; font: 500 16px/1.6 var(--body); }
+.prompt .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.prompt .tag { font: 500 11px var(--mono); color: var(--faint); letter-spacing: .08em; }
+.prompt button { padding: 5px 10px; font-size: 12px; }
+
+/* steps */
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: s; border-top: 1px solid var(--line); }
+ol.steps li { counter-increment: s; display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+ol.steps li::before { content: counter(s, decimal-leading-zero); font: 500 13px var(--mono); color: var(--signal); padding-top: 3px; }
+ol.steps b { font: 600 17px var(--cn); display: block; }
+ol.steps span { color: var(--mute); }
+code { font: 500 13px var(--mono); color: var(--ink); background: var(--sheet); border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; }
+
+/* rules */
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 28px; }
+.rule { padding: 14px 0; border-top: 1px solid var(--line); min-width: 0; }
+.rule b { font: 600 15px var(--body); display: block; }
+.rule span { color: var(--mute); font-size: 14px; }
+
+/* tree + source */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px; align-items: start; }
+pre { margin: 0; font: 400 12.5px/1.7 var(--mono); color: var(--mute); background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; padding: 16px; overflow-x: auto; }
+pre .hl { color: var(--ink); }
+details { border: 1px solid var(--line); border-radius: 4px; background: var(--sheet); }
+summary { cursor: pointer; padding: 14px 16px; font: 500 14px var(--body); list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+summary::after { content: "展开"; font: 500 12px var(--mono); color: var(--signal); }
+details[open] summary::after { content: "收起"; }
+details pre { border: 0; border-top: 1px solid var(--line); border-radius: 0; white-space: pre-wrap; word-break: break-word; max-height: 70vh; overflow: auto; }
+.note { color: var(--faint); font-size: 13px; margin: 0; }
+@media (max-width: 720px) { .split { grid-template-columns: 1fr; } .meta { grid-template-columns: 1fr; } ol.steps li { grid-template-columns: 40px minmax(0,1fr); } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+</head><body><div class="wrap">
+  <header>
+    <div class="eyebrow"><b>Claude Skill</b> · motion-atlas · MIT</div>
+    <h1>Motion Atlas<span>.</span></h1>
+    <p class="lede">123 款商用级动效，全部是代码。说一句话，Claude 从里面挑风格、写文案、卡节奏，直接渲染成片。</p>
+    <p class="sub">下面这块屏幕是真的在运行：每一帧都是你手机现场算出来的，不是视频。点左右切换，或者按类别挑。</p>
+  </header>
+
+  <section class="player" aria-label="动效实时预览">
+    <div class="screen">
+      <canvas id="out" width="1920" height="1080" aria-label="当前动效的实时画面"></canvas>
+      <div class="hud"><span id="hudL">LIVE · WEBGL</span><span id="hudR">01 / 18</span></div>
+      <div class="status" id="status">加载中…</div>
+    </div>
+    <div class="meta">
+      <div class="name"><span class="cn" id="cn">—</span><span class="en" id="en"></span><span class="key" id="key"></span></div>
+      <div class="ctrls"><button id="prev" type="button" aria-label="上一款">←</button><button id="next" type="button" aria-label="下一款">→</button></div>
+      <p class="desc" id="desc"></p>
+    </div>
+    <div class="chips" role="group" aria-label="切换列表">
+      <button class="chip" type="button" data-set="pick" aria-pressed="true">精选 18</button>
+      <button class="chip" type="button" data-set="all" aria-pressed="false">全部 123</button>
+    </div>
+    <div class="strip" id="strip" aria-label="动效列表"></div>
+    <p class="note">光线步进类的 3D 场景（素坯、螺旋楼梯、梯池等）运算量大，在手机上会掉帧。成片是逐帧离线渲染的，所以视频里永远流畅。</p>
+  </section>
+
+  <section>
+    <div><h2>装上之后，你可以这样说</h2><p>不用写代码，也不用记风格名字。描述用途、气质和时长就行。</p></div>
+    <div class="prompts">
+      <div class="prompt"><p>挑 8 款暗黑科技风，做一支 40 秒的产品发布开场，主色换成品牌蓝 #2F6BFF。</p><div class="row"><span class="tag">产品开场</span><button type="button" data-copy>复制</button></div></div>
+      <div class="prompt"><p>做一支小红书用的动效合集，每款 4 秒，亮暗交替，开头用快剪，结尾放图片墙。</p><div class="row"><span class="tag">社媒合集</span><button type="button" data-copy>复制</button></div></div>
+      <div class="prompt"><p>只用东方题材的几款：彩墨、青花瓷、竖排诗笺、书法，做成 30 秒的品牌片头。</p><div class="row"><span class="tag">主题限定</span><button type="button" data-copy>复制</button></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div><h2>它会怎么做</h2><p>这是 skill 里写给 Claude 的流程，按顺序执行。每一步都来自做前两支视频时踩过的坑。</p></div>
+    <ol class="steps">
+      <li><div><b>理解需求，排出场节奏</b><span>最多问一个问题。开场放变化最大的一款，亮暗、动静交替，相似的两款不挨着，结尾收在发光的画面上。</span></div></li>
+      <li><div><b>写配置和文案</b><span>在 <code>scenes.js</code> 里定顺序、主题色、时长、推镜和卡点音效；在 <code>meta.js</code> 里给每款写风格说明、三个技术标签和作品名。</span></div></li>
+      <li><div><b>抽帧自查</b><span>每段抽 3 帧拼成一张图，自己看一遍：文字有没有压到主体，画面前后有没有明显变化，有没有一格一格的卡顿。不合格先改。</span></div></li>
+      <li><div><b>渲染出片</b><span>多进程逐帧渲染，拼接，合成 120 BPM 配乐，音效卡在画面爆点上，再压一份 30MB 以内的分享版。</span></div></li>
+      <li><div><b>交付后问哪段要改</b><span>按「第几款」来改，只重渲改动的那几秒。</span></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <div><h2>写死在 skill 里的规则</h2><p>这几条是两支视频改了十几版之后定下来的，Claude 每次都会遵守。</p></div>
+    <div class="rules">
+      <div class="rule"><b>纵深靠透视，不靠虚化</b><span>用广角、汇聚线和层叠做空间感，不用景深模糊糊弄。</span></div>
+      <div class="rule"><b>主体放右边</b><span>不做正中构图，用斜线和流向，左边留给文字栏。</span></div>
+      <div class="rule"><b>每段都要有变化</b><span>第一秒和最后一秒必须明显不同：推镜、生长、光扫过，或者干脆缩到 4 秒。</span></div>
+      <div class="rule"><b>运动要连续</b><span>不允许按格跳的动画，那会看起来卡顿。</span></div>
+      <div class="rule"><b>音效卡在爆点上</b><span>稳定的鼓点加上与画面同步的重音，不堆满屏音效。</span></div>
+      <div class="rule"><b>配色要高级</b><span>不用五角星、黑配荧光粉这类廉价元素。</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div><h2>里面有什么</h2><p>skill 本身是一份说明书，它调用的代码放在 motion-atlas 动效包里，两样配合使用。</p></div>
+    <div class="split">
+<pre><span class="hl">motion-atlas/</span>
+├─ <span class="hl">SKILL.md</span>        写给 Claude 的说明书
+├─ STYLES.md       123 款动效目录
+├─ README.md       给人看的使用说明
+├─ LICENSE         MIT
+├─ app/
+│  ├─ gallery.html 动效浏览器
+│  ├─ index.html   成片页面
+│  ├─ scenes.js    选哪几款 · 顺序 · 时长
+│  ├─ meta.js      文字栏文案
+│  └─ b1–c7.js     动效库
+└─ tools/
+   ├─ preview.py   抽帧自查
+   ├─ music.py     配乐和卡点
+   └─ render.py    一键出片</pre>
+      <details>
+        <summary>SKILL.md 全文</summary>
+        <pre id="skillmd">---
+name: motion-atlas
+description: Make commercial-grade, code-only motion showcase videos (16:9, split text panel, rapid-cut intro, image-wall outro, synced music) from the Motion Atlas library of 123 WebGL/Canvas styles. Use when asked for a motion reel, style showcase, animated product opener, or &quot;AI 动效视频&quot;.
+---
+
+# Motion Atlas — 代码动效成片
+
+Turn a request like 「挑 8 款暗黑科技风做 40 秒开场」 into a finished MP4. Every frame is generated by code: no footage, no stock assets.
+
+## 0. Get the kit
+
+The code lives in the **motion-atlas** kit (`app/`, `tools/`, `STYLES.md`, `README.md`).
+
+1. Look for the kit in this order:
+   - a `motion-atlas/` folder or `motion-atlas.zip` in the working directory or among the user&#x27;s uploads;
+   - otherwise ask the user for the zip or the repo link.
+   - If neither exists, go to section 6.
+2. Install dependencies:
+
+   ```bash
+   pip install playwright numpy scipy pillow
+   python3 -m playwright install chromium
+   ```
+
+   You also need `ffmpeg`. If the environment already ships Chromium, point Playwright at it instead of installing.
+3. Rendering needs a real shell with Chromium and ffmpeg. In a chat without code execution, you can only publish `app/gallery.html` as a live page. Say so before promising an MP4.
+
+## 1. Settle the brief, then pick styles
+
+Ask at most one short question, and only if the answer changes the plan. Things that matter:
+- **Purpose:** showcase, product opener, or social post.
+- **Length:** 4 s per style for punchy social cuts, 6 s for showcase.
+- **Mood:** dark / light / mixed.
+- **Brand colour.**
+- **Count:** 8–15 styles reads well.
+
+Pick from `STYLES.md`. Build the order for rhythm:
+- **Open** on the strongest transformation, e.g. `SATURNX` (eclipse → sunrise flare) or `COLORINK`.
+- **Alternate** dark and light scenes, and calm and kinetic ones.
+- **Never** put two near-identical scenes back to back, e.g. two data charts or two spinning tunnels.
+- **Close** on something luminous: `NEBULA`, `GLASS`, `AURORAX`.
+
+Proven high-impact picks:
+- **Spectacle:** `SATURNX`, `COLORINK`, `GLASS`, `NEBULA`, `AURORAX`
+- **Kinetic satisfaction:** `SPLITFLAP`, `DOMINO`, `STAMPS`, `MEMPHIS`, `TERRACE`
+- **Premium still life:** `VASE`, `CAIRN`
+- **Mathematical:** `STRINGART`, `MOBIUS`, `PENROSE`
+- **Data:** `CANDLES`
+- **Depth:** `STAIRWELL`
+
+Avoid as hero shots (they read static): `ORBITAL`, `WINDMAP`, `ISOTYPE`, `THERM`.
+
+## 2. Configure the film
+
+Edit `app/scenes.js`:
+- **`PICK` rows:** `[KEY, &#x27;dark&#x27;|&#x27;light&#x27;, &#x27;R,G,B&#x27; accent, &#x27;SHORT TAGLINE&#x27;, &#x27;HUD LINE · TECH NUMBERS&#x27;]`
+- **`PAL`:** 3–5 hex swatches per key, shown under the panel.
+- **`SCRIM`:** an RGB string for busy or light scenes, so the left text stays readable.
+- **`ZOOM`:** a slow push-in, 0.03–0.1, for scenes that need extra motion.
+- **`dur`:** per-key seconds, default 6. Animations are time-compressed, so a 4 s scene still completes its full arc.
+- **`SFX`:** sound accents in scene-local time `lt` (0..8), as `[lt,&#x27;boom&#x27;|&#x27;thud&#x27;|&#x27;click&#x27;|&#x27;pop&#x27;|&#x27;whoosh&#x27;|&#x27;flap&#x27;|&#x27;shimmer&#x27;]` or `[&#x27;run&#x27;, type, lt0, lt1, count]`. Put hits on the visual beat: a flare, a landing, each tile falling.
+
+Edit `app/meta.js`. Each key gets `[desc, [3 tech tags], &#x27;English work title&#x27;, &#x27;中文作品名&#x27;]`. Copy rules, learned from user feedback:
+- **The description explains the style itself:** what it is, where it is used commercially, why it works. Do not narrate how the frame forms.
+- **Tech tags** are short noun phrases, e.g. `光线步进`, `域扭曲`, `减色混合`.
+- **Work titles** are evocative and two to four words, e.g. `Ring of Fire「火环」`. Avoid plain or tacky names.
+- **No line may start with punctuation;** `wrapCJK` already enforces this. Keep descriptions to about 60 Chinese characters so they fit 3 lines at 530 px.
+
+Intro and outro text live in `app/bookend.js`: the title, `第二弹`, and the `VOL.` line. The intro is a rapid montage, one 0.19 s cut per scene with flash and push, then a mosaic and the title. The outro is a thumbnail grid. Do not replace the montage with a list of names; the user explicitly preferred the montage.
+
+## 3. Check before rendering (always)
+
+```bash
+python3 tools/thumbs.py
+python3 tools/preview.py scenes      # 3 frames per scene -&gt; out/preview/sheet.jpg
+```
+
+Look at the sheet yourself (Read the image). Fix before rendering:
+- **Text panel collides with the subject.** The subject must sit right of x≈760 px. Shift it with lens shift (`cam3(..., [260,0])`, `sx` in `rmStyle`) or add a `SCRIM`.
+- **A scene barely changes** across its 3 frames. Add a camera move, a build-up (things drop in or rise up), a light sweep, or shorten it to 4 s. The user rejects static scenes (&quot;没有动感张力&quot;).
+- **Stepped motion reads as stutter.** Quantised animation (`Math.floor(lt*8)` stripes) looks choppy. Use continuous phases.
+- **Overlapping pigments turn black.** In subtractive mixes, weight by the dominant pigment rather than summing.
+- **Wrong frames in raymarched shaders.** `pow(negative, n)` is undefined in GLSL; write `(x)*(x)*(x)`.
+
+## 4. Render and deliver
+
+```bash
+python3 tools/render.py 2        # thumbs -&gt; music -&gt; parallel chunks -&gt; concat -&gt; mux -&gt; share copy
+```
+
+- Raymarched scenes cost 2–15 s per frame on CPU, so a 90 s film takes 1–2 h. Run it in the background and watch the logs.
+- To re-render only changed scenes: `python3 tools/render.py 2 &lt;chunk ids&gt;`. Chunks are 3 s each, chunk = floor(seconds / 3).
+- Deliver `out/film_share.mp4`; it is about 2.4 Mbps and under 30 MB for 90 s. Mention that `out/film_master.mp4` exists.
+- After delivering, ask which scene number feels slow or weak. Users answer by index (&quot;第五个&quot;).
+
+## 5. Visual rules (non-negotiable)
+
+- **Depth** comes from wide-angle perspective, converging lines and layering, never from depth-of-field blur.
+- **Composition:** no dead-centre compositions. Use diagonals and flow, with the subject weighted right so the text panel sits left.
+- **Palette:** use considered, commercial palettes. Avoid tacky motifs (5-point stars, black + hot pink).
+- **Timing:** roughly 4–6 s per style. Every scene needs a visible change between its first and last second.
+- **Sound:** a steady groove plus hits synced to on-screen events; the user loved hits that land exactly on a visual burst. Do not replace the music with busy per-scene sound design; that was rejected.
+
+## 6. Writing a new style (or working without the kit)
+
+All styles push into a list `ST` with `{key, cn, en, cat, desc, render(lt)}` where `lt` runs 0..8. There are three authoring paths, all in `app/`:
+
+- **`shaderStyle(meta, glslFragment, postFn)`:** a full-screen fragment shader. Uniforms are `T` (lt) and `R` (resolution), with helpers `n3`, `fbm`, `rot`. Best for fluids, nebulae, light and fields.
+- **`st2D(meta, lt =&gt; {...})`:** Canvas 2D on `X` (1920×1080). Use `cam3(eye, target, fov, roll, [shiftX, shiftY])` and `line3` for true perspective, painter-sort quads for 3D solids, and `grain(X, a, mode)` for film grain. Best for typography, graphic design, mechanical motion and data.
+- **`rmStyle(meta, {map, pal, bg, ro, ta, fov, sx, L, key, amb, spec, shin, fog, pre})`:** raymarched SDF still life with soft shadows, AO and ACES. Animate through `T` inside `ro` and `map`.
+
+If the kit is unavailable, rebuild the same architecture:
+- a page exposing `window.render(t)` and `window.TOTAL`;
+- Playwright screenshots piped into ffmpeg;
+- a numpy-synthesised 120 BPM track with hits at scene starts.
+
+Then write each style from its one-line description in `STYLES.md`.
+</pre>
+      </details>
+    </div>
+  </section>
+</div>
+
+<script src="lib/gl.js"></script><script src="lib/lib3.js"></script><script src="lib/film.js"></script><script src="lib/base.js"></script><script src="lib/shim.js"></script>
+<script src="lib/b1.js"></script><script src="lib/b2.js"></script><script src="lib/b3.js"></script><script src="lib/b4.js"></script><script src="lib/b5.js"></script><script src="lib/b6.js"></script>
+<script src="lib/c1.js"></script><script src="lib/c2.js"></script><script src="lib/c3.js"></script><script src="lib/c4.js"></script><script src="lib/c5.js"></script><script src="lib/c6.js"></script><script src="lib/c7.js"></script>
+<script>
+(() => {
+  const PICK = ['SATURNX', 'COLORINK', 'SPLITFLAP', 'MEMPHIS', 'STAMPS', 'DOMINO', 'GLASS', 'NEBULA', 'STRINGART', 'CANDLES', 'MOBIUS', 'PENROSE', 'AURORAX', 'CRANES', 'SAKURA', 'LANTERN', 'MOSAIC', 'TERRAZZO'];
+  const $ = id => document.getElementById(id);
+  const all = ST.map((s, i) => i), pick = PICK.map(k => ST.findIndex(s => s.key === k)).filter(i => i >= 0);
+  let list = pick, pos = 0, t0 = performance.now(), visible = true, last = 0, slow = 0;
+  function strip() { const el = $('strip'); el.textContent = ''; list.forEach((si, n) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = ST[si].cn; b.addEventListener('click', () => go(n)); el.appendChild(b); }); }
+  function go(n) { pos = (n + list.length) % list.length; t0 = performance.now(); slow = 0; const s = ST[list[pos]];
+    $('cn').textContent = s.cn; $('en').textContent = s.en; $('key').textContent = s.key; $('desc').textContent = s.desc || '';
+    $('hudR').textContent = String(pos + 1).padStart(2, '0') + ' / ' + list.length; $('status').textContent = '';
+    [...$('strip').children].forEach((b, i) => { b.setAttribute('aria-current', i === pos ? 'true' : 'false'); if (i === pos) b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); }); }
+  $('prev').addEventListener('click', () => go(pos - 1)); $('next').addEventListener('click', () => go(pos + 1));
+  $('out').addEventListener('click', () => go(pos + 1));
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === c ? 'true' : 'false')); list = c.dataset.set === 'all' ? all : pick; strip(); go(0); }));
+  document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', async () => { const p = b.closest('.prompt').querySelector('p'); try { await navigator.clipboard.writeText(p.textContent); b.textContent = '已复制'; } catch (e) { const r = document.createRange(); r.selectNodeContents(p); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = '已选中'; } setTimeout(() => { b.textContent = '复制'; }, 1600); }));
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe($('out'));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function loop(now) { requestAnimationFrame(loop); if (!visible || now - last < 33) return; last = now;
+    const lt = reduce ? 4 : ((now - t0) / 1000) % 8; const a = performance.now();
+    try { renderST(list[pos], lt); } catch (e) { $('status').textContent = '这一款在当前设备上跑不起来，换下一款看看'; }
+    const dt = performance.now() - a; if (dt > 120) { slow++; if (slow > 3) $('status').textContent = '这一款运算量大，手机上会掉帧（成片里是流畅的）'; } }
+  strip(); go(0); window.ready.then(() => requestAnimationFrame(loop));
+})();
+</script>
+
+</body></html>
